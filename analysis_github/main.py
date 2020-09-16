@@ -5,12 +5,15 @@ from collections import Counter
 
 # ПАРАМЕТРЫ ВВОДИТЬ С ПАНЕЛИ
 URL = ''
+NAME_OWNER = 'IgnorantGuru'
+NAME_REPOS = 'spacefm'
 URL_GIT = 'https://api.github.com'
-URL_REP = f'{URL_GIT}/repos/TheAlgorithms/Python'
+URL_REP = f'{URL_GIT}/repos/{NAME_OWNER}/{NAME_REPOS}'
 URL_COMMITS = f'{URL_REP}/commits'
+URL_PULLS = f'{URL_REP}/pulls'
 NAME_PASS = ('sunday8361@gmail.com', 'cfb71627b6cfae6e5daf0c718b86f59c')
 BRANCH = 'master'
-DATA_START = '2000-00-00T00:00:00Z'  # если не задано, то '2000-00-00T00:00:00Z'
+DATA_START = '2020-09-05T00:00:00Z'  # если не задано, то '2000-00-00T00:00:00Z'
 DATA_FINISH = ''  # если не задано, то ''
 
 
@@ -51,10 +54,16 @@ def pretty_table(rows, column_count, column_spacing=4):
         yield ''.join(map(lambda x: x[1] + ' ' * (x[0] - len(x[1])), aligned_row))
 
 
+def voluem():
+
+
+
 if __name__ == '__main__':
     print(f"Sign in GitHub")
     sleep(random.randint(1, 4))
-    sign_in = respons(url=URL_GIT, login=NAME_PASS, timeout=3, params='')
+    sign_in = respons(url=URL_GIT, login=NAME_PASS,
+                      timeout=3, params=''
+                      )
     # print(sign_in)
 
     print(f"Get commits")
@@ -94,4 +103,18 @@ if __name__ == '__main__':
     for line in pretty_table(most_commit, 2):
         print(line)
 
+    print(f"\nGet pulls closed")
+    sleep(random.randint(1, 4))
+    closed_pulls = respons(url=URL_PULLS, login='', timeout=3,
+                           params={"state": "closed",
+                                   "base": BRANCH}
+                           )
+    print(closed_pulls)
 
+    print(f"\nGet pulls open")
+    sleep(random.randint(1, 4))
+    open_pulls = respons(url=URL_PULLS, login='', timeout=3,
+                         params={"state": "open",
+                                 "base": BRANCH}
+                         )
+    print(open_pulls)
