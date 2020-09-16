@@ -5,15 +5,15 @@ import random
 from time import sleep
 from collections import Counter
 
-
 # ПАРАМЕТРЫ ВВОДИТЬ С ПАНЕЛИ
 URL = 'https://api.github.com'
-URL_REP = f'https://api.github.com/repos/IgnorantGuru/spacefm'
+URL_REP = f'https://api.github.com/repos/geekcomputers/Python'
 URL_COMMITS = f'{URL_REP}/commits'
 NAME_PASS = ('sunday8361@gmail.com', 'cfb71627b6cfae6e5daf0c718b86f59c')
-BRANCH = 'alpha'
-DATA_START = '2018-03-28T14:33:18Z' # если не задано, то '2000-00-00T00:00:00Z'
-DATA_FINISH = '' # если не задано, то ''
+BRANCH = 'master'
+DATA_START = '2018-03-28T14:33:18Z'  # если не задано, то '2000-00-00T00:00:00Z'
+DATA_FINISH = ''  # если не задано, то ''
+
 
 # '2016-01-28T14:33:18Z'
 
@@ -65,23 +65,23 @@ if __name__ == '__main__':
     sleep(random.randint(1, 4))
     all_commits = respons(url=URL_COMMITS, login='', timeout=3,
                           params={"sha": BRANCH,
-                               "since": DATA_START,
-                               "until": DATA_FINISH}
+                                  "since": DATA_START,
+                                  "until": DATA_FINISH}
                           )
-    # print(all_commits)
+    print(all_commits)
 
     # Парсим авторов коммитов
-    author_name = []
+    most_commit = []
     for i in range(0, 29, 1):
         try:
-            author_name.append(
+            most_commit.append(
                 all_commits[i]['commit']['author']['name']
             )
         except IndexError:
             print(f'All names of the commit authors collected!\n\n')
             break
     # Считаем коммиты авторов
-    a = Counter(author_name).most_common(30)
+    a = Counter(most_commit).most_common(30)
     print(a)
 
     # Разделяем словарь на два списка
@@ -101,12 +101,23 @@ if __name__ == '__main__':
     #         print(f'Index Error\n')
     #         break
     # # print(author_name)
-#
+    #
     # # Построение таблицы
     # print(f'Most active author')
     # for line in pretty_table(author_name, 2):
     #     print(line)
 
+    # Подготовка данных для построения таблицы
+    most_commit = [['Name Author', 'Number commit']]
+    for cort in a:
+        try:
+            most_commit.append((str(cort[0]), str(cort[1])))
+        except IndexError:
+            print(f'Index Error\n')
+            break
+    print(most_commit)
 
-
-
+    # Построение таблицы
+    print(f'Most active author')
+    for line in pretty_table(most_commit, 2):
+        print(line)
