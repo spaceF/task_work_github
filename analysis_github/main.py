@@ -11,14 +11,13 @@ URL_GIT = 'https://api.github.com'
 URL_REP = f'{URL_GIT}/repos/{NAME_OWNER}/{NAME_REPOS}'
 URL_COMMITS = f'{URL_REP}/commits'
 URL_PULLS = f'{URL_REP}/pulls'
+URL_ISSUE = f'{URL_REP}/issues'
 NAME_PASS = ('sunday8361@gmail.com', 'cfb71627b6cfae6e5daf0c718b86f59c')
 BRANCH = 'master'
-DATA_START = '2000-00-00T00:00:00Z'  # если не задано, то '2000-00-00T00:00:00Z'
-DATA_FINISH = ''  # если не задано, то '2100-00-00T00:00:00Z'
+DATA_START = '2020-07-26T00:00:00Z'  # если не задано, то '2000-00-00T00:00:00Z'
+DATA_FINISH = '2900-00-00T00:00:00Z'  # если не задано, то '2900-00-00T00:00:00Z'
 NUMBER_COMMIT = 30
 
-
-# &per_page=50&page=2
 
 def github_resp(**kwargs):
     # Запрос к GitHub
@@ -33,12 +32,16 @@ def github_resp(**kwargs):
         r.raise_for_status()
     except requests.exceptions.HTTPError as errh:
         res.append(f"Http Error: {errh}")
+        return res
     except requests.exceptions.ConnectionError as errc:
         res.append(f"Error Connection: {errc}")
+        return res
     except requests.exceptions.Timeout as errt:
         res.append(f"Timeout error: {errt}")
+        return res
     except requests.exceptions.RequestException as err:
         res.append(f"Something Else: {err}")
+        return res
     else:
         res.append(f'Success!')
 
@@ -74,29 +77,35 @@ def pretty_table(rows, column_count, column_spacing=4):
 
 def get_pull_requests(url, state, branch, timeout):
     # Получить даты, примеры pull requests заданной ветки
+    # заданного времени
 
+    stats = ''
     p = []
+    i = 1
     page = 1
     while page > 0:
         sleep(random.randint(1, 4))
         resp_pulls = github_resp(url=url, login='', timeout=timeout,
                                  params={"state": state,
                                          "base": branch,
-                                         "page": page}
+                                         "page": i
+                                         }
                                  )
         stats = resp_pulls[0]
         if stats != 'Success!':
-            return p.append(stats)
+            return p, stats
         page = resp_pulls[1]
         pulls = resp_pulls[2]
-        [p.append((pull['title'], pull['created_at'])) for pull in pulls]
-    return p
+        [p.append((pull['title'], pull['created_at'])) for pull in pulls
+         if DATA_START <= pull['created_at'] <= DATA_FINISH]
+    return p, stats
 
 
 def get_commits(url, branch, timeout, since, until):
     # Получить авторов коммитов заданной ветки
-    # по заданному времени
+    # заданного времени
 
+    stats = ''
     p = []
     i = 1  # Итерация страниц
     page = 1  # Флаг наличия следующей страницы
@@ -106,22 +115,49 @@ def get_commits(url, branch, timeout, since, until):
                                    params={"sha": branch,
                                            "since": since,
                                            "until": until,
-                                           "page": i}
+                                           "page": i
+                                           }
                                    )
         stats = resp_commits[0]
         if stats != 'Success!':
-            return p.append(stats)
+            return p, stats
         page = resp_commits[1]
-        [p.append(com) for com in resp_commits[2]]
+        [p.append(com['commit']['author']['name']) for com in resp_commits[2]]
         # Получаем первые 30ть позиций
         if len(p) >= 30:
-            return p
+            return p, stats
         i += 1
-    return p
+    return p, stats
+
+
+def get_issue(url, state, branch, timeout):
+    # Получить даты, примеры issue заданной ветки
+    # заданного времени
+
+    stats = ''
+    p = []
+    i = 1
+    page = 1
+    while page > 0:
+        sleep(random.randint(1, 4))
+        resp_pulls = github_resp(url=url, login='', timeout=timeout,
+                                 params={"state": state,
+                                         "base": branch,
+                                         "page": i
+                                         }
+                                 )
+        stats = resp_pulls[0]
+        if stats != 'Success!':
+            return p, stats
+        page = resp_pulls[1]
+        pulls = resp_pulls[2]
+        [p.append((pull['title'], pull['created_at'])) for pull in pulls
+         if DATA_START <= pull['created_at'] <= DATA_FINISH]
+    return p, stats
 
 
 def main():
-    print(f"Sign in GitHub")
+    print(f"-Sign in GitHub-")
     sleep(random.randint(1, 4))
     sign_in = github_resp(url=URL_GIT, login=NAME_PASS,
                           timeout=3, params=''
@@ -129,79 +165,50 @@ def main():
     stat_sign_in = sign_in[0]
     print(stat_sign_in)
 
-    print(f"Get commits")
-    # sleep(random.randint(1, 4))
-    # resp_commits = github_resp(url=URL_COMMITS, login='', timeout=3,
-    #                            params={"sha": BRANCH,
-    #                                    "since": DATA_START,
-    #                                    "until": DATA_FINISH
-    #                                    }
-    #                            )
-    # pa = resp_commits[1]
-    # all_commits = resp_commits[2]
-    # stat_resp_commits = resp_commits[0]
-    # print(stat_resp_commits)
-    # Парсим авторов коммитов
-    # most_commit = []
-    # for i in range(0, NUMBER_COMMIT - 1, 1):
-    #     try:
-    #         most_commit.append(
-    #             all_commits[i]['commit']['author']['name']
-    #         )
-    #     except IndexError:
-    #         print(f'All names of the commit authors collected!\n\n')
-    #         break
-    # # Считаем коммиты авторов и сортируем по убыванию
-    # m_commit = Counter(most_commit).most_common(30)
-    # # Подготовка данных для построения таблицы
-    # row_commit = [['Name Author', 'Number commit']]
-    # [row_commit.append((str(cort[0]), str(cort[1]))) for cort in m_commit]
-    # # Построение таблицы
-    # print(f'Most active author')
-    # [print(line) for line in pretty_table(row_commit, 2)]
-    commits = get_commits(url=URL_COMMITS, branch=BRANCH,
-                          since=DATA_START, until=DATA_FINISH, timeout=3)
-    if commits[0] == 'Success!':
-        return f"{commits[0]}"
-    print(commits[0])
+    print(f"\n-Get commits-")
+    commits, comm_st = get_commits(url=URL_COMMITS, branch=BRANCH,
+                                   since=DATA_START, until=DATA_FINISH, timeout=3)
+    if comm_st != 'Success!':
+        return print(f"{comm_st}")
+    # Считаем коммиты авторов и сортируем по убыванию
+    m_commit = Counter(commits).most_common(30)
+    # Подготовка данных для построения таблицы
+    row_commit = [['Name Author', 'Number commit']]
+    [row_commit.append((str(cort[0]), str(cort[1]))) for cort in m_commit]
+    # Построение таблицы
+    print(f'Most active author')
+    [print(line) for line in pretty_table(row_commit, 2)]
 
     print(f"\nGet pulls closed")
-    closed_pulls = get_pull_requests(URL_PULLS, 'closed', BRANCH, 3)
-    if closed_pulls[0] == 'Success!':
-        return f"{closed_pulls[0]}"
+    closed_pulls, pulls_stat_cl = get_pull_requests(URL_PULLS, 'closed', BRANCH, 3)
+    if pulls_stat_cl != 'Success!':
+        return print(f"{pulls_stat_cl}")
     print(f'\nExamples pulls closed:')
     numb_ex_pull = 5  # число выводимых примеров
-    [print(pull) for index, pull in enumerate(closed_pulls)
+    [print(pull[0]) for index, pull in enumerate(closed_pulls)
      if index < numb_ex_pull]
-    print(f'\nNumber pulls closed = {int(len(closed_pulls)) + 1}')
+    print(f'\nNumber pulls closed = {len(closed_pulls)}')
+
     print(f"\nGet pulls open")
-    open_pulls = get_pull_requests(URL_PULLS, 'open', BRANCH, 3)
-    print(open_pulls)
-    # print(f"\nGet pulls closed")
-    # closed_pulls = []
-    # page = 1
-    # while page > 0:
-    #     sleep(random.randint(1, 4))
-    #     resp_pulls = respons(url=URL_PULLS, login='', timeout=3,
-    #                          params={"state": "closed",
-    #                                  "base": BRANCH}
-    #                          )
-    #     page = resp_pulls[0]
-    #     closed_pulls.append(resp_pulls[1])
-    # print(closed_pulls)
-    # print(f"\nGet pulls open")
-    # open_pulls = []
-    # page = 1
-    # while page > 0:
-    #     sleep(random.randint(1, 4))
-    #     resp_pulls = respons(url=URL_PULLS, login='', timeout=3,
-    #                          params={"state": "open",
-    #                                  "base": BRANCH}
-    #                          )
-    #     page = resp_pulls[0]
-    #     open_pulls.append(resp_pulls[1])
-    # print(open_pulls)
+    open_pulls, pulls_stat_op = get_pull_requests(URL_PULLS, 'open', BRANCH, 3)
+    if pulls_stat_op != 'Success!':
+        return print(f"{pulls_stat_op}")
+    print(f'\nExamples pulls closed:')
+    numb_ex_pull = 5  # число выводимых примеров
+    [print(pull[0]) for index, pull in enumerate(open_pulls)
+     if index < numb_ex_pull]
+    print(f'\nNumber pulls open = {len(open_pulls)}')
+
+    print(f"\nGet issue")
+    open_issue, issue_stat_op = get_issue(URL_ISSUE, 'open', BRANCH, 3)
+    if issue_stat_op != 'Success!':
+        return print(f"{issue_stat_op}")
+    print(f'\nExamples pulls closed:')
+    numb_ex_issue = 5  # число выводимых примеров
+    [print(issue[0]) for index, issue in enumerate(open_issue)
+     if index < numb_ex_issue]
+    print(f'\nNumber pulls open = {len(open_issue)}')
 
 
 if __name__ == '__main__':
-    print(main())
+    main()
