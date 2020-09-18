@@ -1,5 +1,9 @@
 import requests
 import random
+import sys
+import re
+import math
+import datetime
 from time import sleep
 from collections import Counter
 
@@ -159,6 +163,24 @@ def get_issue(url, state, branch, timeout):
     return p, stats
 
 
+def valid_age(list, number_days):
+    """Поиск "старых" элементов списка"""
+
+    n = []
+    date_now = datetime.datetime.now().isoformat()
+    b1 = re.split(r':', date_now)
+    b11 = b1[0].split('T')[0].split('-')
+    bb = datetime.date(int(b11[0]), int(b11[1]), int(b11[2]))
+    for i in list:
+        a1 = re.split(r':', i[1])
+        a11 = a1[0].split('T')[0].split('-')
+        aa = datetime.date(int(a11[0]), int(a11[1]), int(a11[2]))
+        x = math.fabs(int(str(aa - bb).split()[0]))
+        if x >= number_days:
+            n.append(i)
+    return n
+
+
 def main():
     print(f"-Sign in GitHub-")
     sleep(random.randint(1, 4))
@@ -179,10 +201,10 @@ def main():
     row_commit = [['Name Author', 'Number commit']]
     [row_commit.append((str(cort[0]), str(cort[1]))) for cort in m_commit]
     # Построение таблицы
-    print(f'Most active author')
+    print(f'Most active author:')
     [print(line) for line in pretty_table(row_commit, 2)]
 
-    print(f"\nGet pulls closed")
+    print(f"\n-Get pulls closed-")
     closed_pulls, pulls_stat_cl = get_pull_requests(URL_PULLS, 'closed', BRANCH, 3)
     if pulls_stat_cl != 'Success!':
         return print(f"{pulls_stat_cl}")
@@ -192,7 +214,7 @@ def main():
      if index < numb_ex_pull]
     print(f'\nNumber pulls closed = {len(closed_pulls)}')
 
-    print(f"\nGet pulls open")
+    print(f"\n-Get pulls open-")
     open_pulls, pulls_stat_op = get_pull_requests(URL_PULLS, 'open', BRANCH, 3)
     if pulls_stat_op != 'Success!':
         return print(f"{pulls_stat_op}")
@@ -202,8 +224,14 @@ def main():
      if index < numb_ex_pull]
     print(f'\nNumber pulls open = {len(open_pulls)}')
 
+    print(f'\nExamples old pulls:')
+    age_pulls = valid_age(open_pulls, 30)
+    numb_ex_pull = 5  # число выводимых примеров
+    [print(pull[0]) for index, pull in enumerate(age_pulls)
+     if index < numb_ex_pull]
+    print(f'\nNumber old pulls = {len(age_pulls)}')
 
-    print(f"\nGet issue closed")
+    print(f"\n-Get issue closed-")
     closed_issue, issue_stat_cl = get_issue(URL_ISSUE, 'closed', BRANCH, 3)
     if issue_stat_cl != 'Success!':
         return print(f"{issue_stat_cl}")
@@ -213,7 +241,7 @@ def main():
      if index < numb_ex_issue]
     print(f'\nNumber issue closed = {len(closed_issue)}')
 
-    print(f"\nGet issue open")
+    print(f"\n-Get issue open-")
     open_issue, issue_stat_op = get_issue(URL_ISSUE, 'open', BRANCH, 3)
     if issue_stat_op != 'Success!':
         return print(f"{issue_stat_op}")
@@ -222,6 +250,13 @@ def main():
     [print(issue[0]) for index, issue in enumerate(open_issue)
      if index < numb_ex_issue]
     print(f'\nNumber issue open = {len(open_issue)}')
+
+    print(f'\nExamples old issue:')
+    age_issue = valid_age(open_issue, 14)
+    numb_ex_issue = 5  # число выводимых примеров
+    [print(issue[0]) for index, issue in enumerate(age_issue)
+     if index < numb_ex_issue]
+    print(f'\nNumber old issue = {len(age_issue)}')
 
 
 if __name__ == '__main__':
