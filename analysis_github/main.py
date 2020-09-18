@@ -6,20 +6,7 @@ import math
 import datetime
 from time import sleep
 from collections import Counter
-
-# ПАРАМЕТРЫ ВВОДИТЬ С ПАНЕЛИ
-URL = ''
-NAME_OWNER = 'IgnorantGuru'
-NAME_REPOS = 'spacefm'
-URL_GIT = 'https://api.github.com'
-URL_REP = f'{URL_GIT}/repos/{NAME_OWNER}/{NAME_REPOS}'
-URL_COMMITS = f'{URL_REP}/commits'
-URL_PULLS = f'{URL_REP}/pulls'
-URL_ISSUE = f'{URL_REP}/issues'
-NAME_PASS = ('sunday8361@gmail.com', 'cfb71627b6cfae6e5daf0c718b86f59c')
-BRANCH = 'master'
-DATE_START = '2018-07-26T00:00:00Z'  # если не задано, то '2000-00-00T00:00:00Z'
-DATE_FINISH = '2900-00-00T00:00:00Z'  # если не задано, то '2900-00-00T00:00:00Z'
+from getpass import getpass
 
 
 def github_resp(**kwargs):
@@ -152,12 +139,47 @@ def valid_age(list, number_days):
     return n
 
 
+def is_not_blank(s):
+    return bool(s and s.strip())
+
+
 def main():
+    # ПАРАМЕТРЫ
+    URL = input(f'\nСсылка на репозиторий: ')
+    if is_not_blank(URL) == False:
+        return sys.stdout.write('\n' + 'Ссылка на репозиторий не найдена')
+    NAME_OWNER = URL.split('/')[3]
+    NAME_REPOS = URL.split('/')[4]
+    URL_GIT = 'https://github.com'
+    URL_REP = f'{URL_GIT}/repos/{NAME_OWNER}/{NAME_REPOS}'
+    URL_COMMITS = f'{URL_REP}/commits'
+    URL_PULLS = f'{URL_REP}/pulls'
+    URL_ISSUE = f'{URL_REP}/issues'
+
+    MAIL_PASS = (input(f'\nПочта аккаунта Github: '),
+                 getpass(prompt='\nПароль: '))
+    if is_not_blank(MAIL_PASS[0]) == False:
+        return sys.stdout.write('\n' + 'Почта не найдена')
+    if is_not_blank(MAIL_PASS[1]) == False:
+        return sys.stdout.write('\n' + 'Пароль не найден')
+
+    BRANCH = input(f'\nВетвь для анализа: ')
+    if is_not_blank(BRANCH) == False:
+        sys.stdout.write('\n' + 'Ветка не найдена. '
+                                'По умолчанию устанавливается master')
+        BRANCH = 'master'
+
+    DATE_START = input(f'\nДата начала анализа (ГГ-ММ-ДД): ') + 'T00:00:00Z'
+    DATE_FINISH = input(f'\nДата окончания анализа (ГГ-ММ-ДД): ') + 'T00:00:00Z'
+    if is_not_blank(DATE_START) == False:
+        DATE_START = '2000-00-00T00:00:00Z'
+    if is_not_blank(DATE_FINISH) == False:
+        DATE_FINISH = '2900-00-00T00:00:00Z'
 
     # Sign in
     sys.stdout.write(f"-Sign in GitHub-\n")
     sleep(random.randint(1, 4))
-    sign_in = github_resp(url=URL_GIT, login=NAME_PASS,
+    sign_in = github_resp(url=URL_GIT, login=MAIL_PASS,
                           timeout=3, params=''
                           )
     stat_sign_in = sign_in[0]
