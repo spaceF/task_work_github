@@ -156,12 +156,13 @@ def main():
     URL_PULLS = f'{URL_REP}/pulls'
     URL_ISSUE = f'{URL_REP}/issues'
 
-    MAIL_PASS = (input(f'\nПочта аккаунта Github: '),
-                 getpass(prompt='\nПароль: '))
-    if is_not_blank(MAIL_PASS[0]) == False:
+    mail_ = input(f'\nПочта аккаунта Github: ')
+    if is_not_blank(mail_) == False:
         return sys.stdout.write('\n' + 'Почта не найдена')
-    if is_not_blank(MAIL_PASS[1]) == False:
+    pass_ = getpass(prompt='\nПароль: ')
+    if is_not_blank(pass_) == False:
         return sys.stdout.write('\n' + 'Пароль не найден')
+    MAIL_PASS = (mail_, pass_)
 
     BRANCH = input(f'\nВетвь для анализа: ')
     if is_not_blank(BRANCH) == False:
