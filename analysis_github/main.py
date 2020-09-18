@@ -14,16 +14,16 @@ URL_PULLS = f'{URL_REP}/pulls'
 URL_ISSUE = f'{URL_REP}/issues'
 NAME_PASS = ('sunday8361@gmail.com', 'cfb71627b6cfae6e5daf0c718b86f59c')
 BRANCH = 'master'
-DATA_START = '2020-07-26T00:00:00Z'  # если не задано, то '2000-00-00T00:00:00Z'
+DATA_START = '2000-07-26T00:00:00Z'  # если не задано, то '2000-00-00T00:00:00Z'
 DATA_FINISH = '2900-00-00T00:00:00Z'  # если не задано, то '2900-00-00T00:00:00Z'
-NUMBER_COMMIT = 30
 
 
 def github_resp(**kwargs):
-    # Запрос к GitHub
+    """Запрос к GitHub"""
 
     res = []
     try:
+        sleep(random.randint(3, 10))
         r = requests.get(url=f"{kwargs['url']}",
                          auth=kwargs['login'],
                          timeout=kwargs['timeout'],
@@ -63,7 +63,7 @@ def github_resp(**kwargs):
 
 
 def pretty_table(rows, column_count, column_spacing=4):
-    # Построение таблицы
+    """Построение таблицы"""
 
     aligned_columns = []
     for column in range(column_count):
@@ -76,15 +76,14 @@ def pretty_table(rows, column_count, column_spacing=4):
 
 
 def get_pull_requests(url, state, branch, timeout):
-    # Получить даты, примеры pull requests заданной ветки
-    # заданного времени
+    """Получить даты, примеры pull requests
+    заданной ветки заданного времени"""
 
     stats = ''
     p = []
-    i = 1
-    page = 1
+    i = 1  # Итерация страниц
+    page = 1  # Флаг наличия следующей страницы
     while page > 0:
-        sleep(random.randint(1, 4))
         resp_pulls = github_resp(url=url, login='', timeout=timeout,
                                  params={"state": state,
                                          "base": branch,
@@ -98,12 +97,14 @@ def get_pull_requests(url, state, branch, timeout):
         pulls = resp_pulls[2]
         [p.append((pull['title'], pull['created_at'])) for pull in pulls
          if DATA_START <= pull['created_at'] <= DATA_FINISH]
+
+        i += 1
     return p, stats
 
 
 def get_commits(url, branch, timeout, since, until):
-    # Получить авторов коммитов заданной ветки
-    # заданного времени
+    """Получить авторов коммитов
+    заданной ветки заданного времени"""
 
     stats = ''
     p = []
@@ -131,8 +132,8 @@ def get_commits(url, branch, timeout, since, until):
 
 
 def get_issue(url, state, branch, timeout):
-    # Получить даты, примеры issue заданной ветки
-    # заданного времени
+    """Получить даты, примеры issue
+    заданной ветки заданного времени"""
 
     stats = ''
     p = []
@@ -140,19 +141,21 @@ def get_issue(url, state, branch, timeout):
     page = 1
     while page > 0:
         sleep(random.randint(1, 4))
-        resp_pulls = github_resp(url=url, login='', timeout=timeout,
+        resp_issue = github_resp(url=url, login='', timeout=timeout,
                                  params={"state": state,
                                          "base": branch,
                                          "page": i
                                          }
                                  )
-        stats = resp_pulls[0]
+        stats = resp_issue[0]
         if stats != 'Success!':
             return p, stats
-        page = resp_pulls[1]
-        pulls = resp_pulls[2]
-        [p.append((pull['title'], pull['created_at'])) for pull in pulls
-         if DATA_START <= pull['created_at'] <= DATA_FINISH]
+        page = resp_issue[1]
+        issues = resp_issue[2]
+        [p.append((issue['title'], issue['created_at'])) for issue in issues
+         if DATA_START <= issue['created_at'] <= DATA_FINISH]
+
+        i += 1
     return p, stats
 
 
@@ -193,21 +196,32 @@ def main():
     open_pulls, pulls_stat_op = get_pull_requests(URL_PULLS, 'open', BRANCH, 3)
     if pulls_stat_op != 'Success!':
         return print(f"{pulls_stat_op}")
-    print(f'\nExamples pulls closed:')
+    print(f'\nExamples pulls open:')
     numb_ex_pull = 5  # число выводимых примеров
     [print(pull[0]) for index, pull in enumerate(open_pulls)
      if index < numb_ex_pull]
     print(f'\nNumber pulls open = {len(open_pulls)}')
 
-    print(f"\nGet issue")
+
+    print(f"\nGet issue closed")
+    closed_issue, issue_stat_cl = get_issue(URL_ISSUE, 'closed', BRANCH, 3)
+    if issue_stat_cl != 'Success!':
+        return print(f"{issue_stat_cl}")
+    print(f'\nExamples issue closed:')
+    numb_ex_issue = 5  # число выводимых примеров
+    [print(issue[0]) for index, issue in enumerate(closed_issue)
+     if index < numb_ex_issue]
+    print(f'\nNumber issue closed = {len(closed_issue)}')
+
+    print(f"\nGet issue open")
     open_issue, issue_stat_op = get_issue(URL_ISSUE, 'open', BRANCH, 3)
     if issue_stat_op != 'Success!':
         return print(f"{issue_stat_op}")
-    print(f'\nExamples pulls closed:')
+    print(f'\nExamples issue open:')
     numb_ex_issue = 5  # число выводимых примеров
     [print(issue[0]) for index, issue in enumerate(open_issue)
      if index < numb_ex_issue]
-    print(f'\nNumber pulls open = {len(open_issue)}')
+    print(f'\nNumber issue open = {len(open_issue)}')
 
 
 if __name__ == '__main__':
