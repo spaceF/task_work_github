@@ -18,7 +18,7 @@ URL_PULLS = f'{URL_REP}/pulls'
 URL_ISSUE = f'{URL_REP}/issues'
 NAME_PASS = ('sunday8361@gmail.com', 'cfb71627b6cfae6e5daf0c718b86f59c')
 BRANCH = 'master'
-DATE_START = '2000-07-26T00:00:00Z'  # если не задано, то '2000-00-00T00:00:00Z'
+DATE_START = '2018-07-26T00:00:00Z'  # если не задано, то '2000-00-00T00:00:00Z'
 DATE_FINISH = '2900-00-00T00:00:00Z'  # если не задано, то '2900-00-00T00:00:00Z'
 
 
@@ -79,28 +79,27 @@ def pretty_table(rows, column_count, column_spacing=4):
         yield ''.join(map(lambda x: x[1] + ' ' * (x[0] - len(x[1])), aligned_row))
 
 
-def get_pull_requests(url, state, branch, timeout, start, finish):
-    """Получить даты, примеры pull requests
-    заданной ветки заданного времени"""
+def get(url, state, branch, timeout, start, finish):
+    """Получить даты, примеры заданной
+    ветки заданного времени"""
 
     stats = ''
     p = []
     i = 1  # Итерация страниц
     page = 1  # Флаг наличия следующей страницы
     while page > 0:
-        resp_pulls = github_resp(url=url, login='', timeout=timeout,
-                                 params={"state": state,
-                                         "base": branch,
-                                         "page": i
-                                         }
-                                 )
-        stats = resp_pulls[0]
+        resp = github_resp(url=url, login='', timeout=timeout,
+                           params={"state": state,
+                                   "base": branch,
+                                   "page": i
+                                   }
+                           )
+        stats = resp[0]
         if stats != 'Success!':
             return p, stats
-        page = resp_pulls[1]
-        pulls = resp_pulls[2]
-        [p.append((pull['title'], pull['created_at'])) for pull in pulls
-         if start <= pull['created_at'] <= finish]
+        page = resp[1]
+        [p.append((r['title'], r['created_at'])) for r in resp[2]
+         if start <= r['created_at'] <= finish]
 
         i += 1
     return p, stats
@@ -135,34 +134,6 @@ def get_commits(url, branch, timeout, since, until):
     return p, stats
 
 
-def get_issue(url, state, branch, timeout, start, finish):
-    """Получить даты, примеры issue
-    заданной ветки заданного времени"""
-
-    stats = ''
-    p = []
-    i = 1
-    page = 1
-    while page > 0:
-        sleep(random.randint(1, 4))
-        resp_issue = github_resp(url=url, login='', timeout=timeout,
-                                 params={"state": state,
-                                         "base": branch,
-                                         "page": i
-                                         }
-                                 )
-        stats = resp_issue[0]
-        if stats != 'Success!':
-            return p, stats
-        page = resp_issue[1]
-        issues = resp_issue[2]
-        [p.append((issue['title'], issue['created_at'])) for issue in issues
-         if start <= issue['created_at'] <= finish]
-
-        i += 1
-    return p, stats
-
-
 def valid_age(list, number_days):
     """Поиск "старых" элементов списка"""
 
@@ -182,6 +153,8 @@ def valid_age(list, number_days):
 
 
 def main():
+
+    # Sign in
     sys.stdout.write(f"-Sign in GitHub-\n")
     sleep(random.randint(1, 4))
     sign_in = github_resp(url=URL_GIT, login=NAME_PASS,
@@ -190,6 +163,7 @@ def main():
     stat_sign_in = sign_in[0]
     sys.stdout.write(stat_sign_in + '\n')
 
+    # commits
     sys.stdout.write(f"\n-Get commits-\n")
     commits, comm_st = get_commits(url=URL_COMMITS, branch=BRANCH,
                                    since=DATE_START, until=DATE_FINISH, timeout=3)
@@ -204,66 +178,70 @@ def main():
     sys.stdout.write(f'Most active author:\n')
     [sys.stdout.write(line + '\n') for line in pretty_table(row_commit, 2)]
 
+    # pulls closed
     sys.stdout.write(f"\n-Get pulls closed-\n")
-    closed_pulls, pulls_stat_cl = get_pull_requests(URL_PULLS, 'closed', BRANCH, 3,
-                                                    start=DATE_START, finish=DATE_FINISH
-                                                    )
+    closed_pulls, pulls_stat_cl = get(URL_PULLS, 'closed', BRANCH, 3,
+                                      start=DATE_START, finish=DATE_FINISH
+                                      )
     if pulls_stat_cl != 'Success!':
         return sys.stdout.write(f"{pulls_stat_cl}\n")
     sys.stdout.write(f'\nExamples pulls closed:\n')
-    numb_ex_pull = 5  # число выводимых примеров
+    numb_cl_pull = 5  # число выводимых примеров
     [sys.stdout.write(pull[0] + '\n') for index, pull in enumerate(closed_pulls)
-     if index < numb_ex_pull]
+     if index < numb_cl_pull]
     sys.stdout.write(f'\nNumber pulls closed = {len(closed_pulls)}\n')
 
+    # pulls open
     sys.stdout.write(f"\n-Get pulls open-\n")
-    open_pulls, pulls_stat_op = get_pull_requests(URL_PULLS, 'open', BRANCH, 3,
-                                                  start=DATE_START, finish=DATE_FINISH
-                                                  )
+    open_pulls, pulls_stat_op = get(URL_PULLS, 'open', BRANCH, 3,
+                                    start=DATE_START, finish=DATE_FINISH
+                                    )
     if pulls_stat_op != 'Success!':
         return sys.stdout.write(f"{pulls_stat_op}\n")
     sys.stdout.write(f'\nExamples pulls open:\n')
-    numb_ex_pull = 5  # число выводимых примеров
+    numb_op_pull = 5  # число выводимых примеров
     [sys.stdout.write(pull[0] + '\n') for index, pull in enumerate(open_pulls)
-     if index < numb_ex_pull]
+     if index < numb_op_pull]
     sys.stdout.write(f'\nNumber pulls open = {len(open_pulls)}\n')
 
     sys.stdout.write(f'\nExamples old pulls:\n')
     age_pulls = valid_age(open_pulls, 30)
-    numb_ex_pull = 5  # число выводимых примеров
+    numb_old_pull = 5  # число выводимых примеров
     [sys.stdout.write(pull[0] + '\n') for index, pull in enumerate(age_pulls)
-     if index < numb_ex_pull]
+     if index < numb_old_pull]
     sys.stdout.write(f'\nNumber old pulls = {len(age_pulls)}\n')
 
+    # issue closed
     sys.stdout.write(f"\n-Get issue closed-\n")
-    closed_issue, issue_stat_cl = get_issue(URL_ISSUE, 'closed', BRANCH, 3,
-                                            start=DATE_START, finish=DATE_FINISH
-                                            )
+    closed_issue, issue_stat_cl = get(URL_ISSUE, 'closed', BRANCH, 3,
+                                      start=DATE_START, finish=DATE_FINISH
+                                      )
     if issue_stat_cl != 'Success!':
         return sys.stdout.write(f"{issue_stat_cl}\n")
     sys.stdout.write(f'\nExamples issue closed:\n')
-    numb_ex_issue = 5  # число выводимых примеров
+    numb_cl_issue = 5  # число выводимых примеров
     [sys.stdout.write(issue[0] + '\n') for index, issue in enumerate(closed_issue)
-     if index < numb_ex_issue]
+     if index < numb_cl_issue]
     sys.stdout.write(f'\nNumber issue closed = {len(closed_issue)}\n')
 
+    # issue open
     sys.stdout.write(f"\n-Get issue open-\n")
-    open_issue, issue_stat_op = get_issue(URL_ISSUE, 'open', BRANCH, 3,
-                                          start=DATE_START, finish=DATE_FINISH
-                                          )
+    open_issue, issue_stat_op = get(URL_ISSUE, 'open', BRANCH, 3,
+                                    start=DATE_START, finish=DATE_FINISH
+                                    )
     if issue_stat_op != 'Success!':
         return sys.stdout.write(f"{issue_stat_op}\n")
     sys.stdout.write(f'\nExamples issue open:\n')
-    numb_ex_issue = 5  # число выводимых примеров
+    numb_op_issue = 5  # число выводимых примеров
     [sys.stdout.write(issue[0] + '\n') for index, issue in enumerate(open_issue)
-     if index < numb_ex_issue]
+     if index < numb_op_issue]
     sys.stdout.write(f'\nNumber issue open = {len(open_issue)}\n')
 
     sys.stdout.write(f'\nExamples old issue:\n')
     age_issue = valid_age(open_issue, 14)
-    numb_ex_issue = 5  # число выводимых примеров
+    numb_old_issue = 5  # число выводимых примеров
     [sys.stdout.write(issue[0] + '\n') for index, issue in enumerate(age_issue)
-     if index < numb_ex_issue]
+     if index < numb_old_issue]
     sys.stdout.write(f'\nNumber old issue = {len(age_issue)}\n')
 
 
