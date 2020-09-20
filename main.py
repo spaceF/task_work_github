@@ -147,12 +147,12 @@ def is_not_blank(s):
 
 
 def main():
-    stdout.write(f'\nAnalysis of GitHubs repository\n')
+    stdout.write(f'\n\nAnalysis of GitHubs repository\n')
 
     # ПАРАМЕТРЫ
     url = input(f'\nLink repository: ')
     if not is_not_blank(url):
-        return stdout.write(f'\nLink is not found\n')
+        return stdout.write(f'Link is not found\n')
     name_owner = url.split('/')[3]
     name_repos = url.split('/')[4]
     url_git = 'https://api.github.com'
@@ -161,34 +161,34 @@ def main():
     url_pulls = f'{url_rep}/pulls'
     url_issue = f'{url_rep}/issues'
 
-    mail_git = input(f'\nMail Github: ')
+    mail_git = input(f'Mail Github: ')
     if not is_not_blank(mail_git):
-        return stdout.write(f'\nMail is not found\n')
-    pass_git = getpass(f'\nPassword: ')
+        return stdout.write(f'Mail is not found\n')
+    pass_git = getpass(f'Password Github: ')
     if not is_not_blank(pass_git):
-        return stdout.write(f'\nPassword is not found\n')
+        return stdout.write(f'Password is not found\n')
     mail_pass = (mail_git, pass_git)
 
-    branch = input(f'\nBranch for analysis: ')
+    branch = input(f'Branch for analysis: ')
     if not is_not_blank(branch):
         stdout.write(f'Branch is not found. '
                      'Default - master\n')
         branch = 'master'
 
-    date_start = input(f'\nStart date analysis (YY-MM-DD): ') + 'T00:00:00Z'
-    date_finish = input(f'\nFinish date analysis (YY-MM-DD): ') + 'T00:00:00Z'
+    date_start = input(f'Start date analysis (YY-MM-DD): ') + 'T00:00:00Z'
+    date_finish = input(f'Finish date analysis (YY-MM-DD): ') + 'T00:00:00Z'
     if date_start == 'T00:00:00Z':
         date_start = '2000-00-00T00:00:00Z'
     if date_finish == 'T00:00:00Z':
         date_finish = '2900-00-00T00:00:00Z'
 
     # Sign in
-    stdout.write(f"\n\n-Sign in GitHub-\n")
+    stdout.write(f"\n-Sign in GitHub-")
     sign_in = github_resp(url=url_git, login=mail_pass,
                           timeout=3, params=''
                           )
     stat_sign_in = sign_in[0]
-    stdout.write(f'\n{stat_sign_in}')
+    stdout.write(f'\n{stat_sign_in}\n')
 
     # commits
     stdout.write(f"\n-Get commits-\n")
@@ -271,7 +271,7 @@ def main():
      if index < numb_old_issue]
     stdout.write(f'\nNumber old issue = {len(age_issue)}\n')
 
-    stdout.write(f'\nAnalysis of GitHubs repository completed successfully\n')
+    stdout.write(f'\nAnalysis of GitHubs repository completed successfully!\n')
 
 
 if __name__ == '__main__':
