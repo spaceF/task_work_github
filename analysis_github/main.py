@@ -149,16 +149,16 @@ def is_not_blank(s):
 
 def main():
     # ПАРАМЕТРЫ
-    URL = input(f'\nСсылка на репозиторий: ')
-    if not is_not_blank(URL):
+    url = input(f'\nСсылка на репозиторий: ')
+    if not is_not_blank(url):
         return sys.stdout.write(f'\nСсылка на репозиторий не найдена\n')
-    NAME_OWNER = URL.split('/')[3]
-    NAME_REPOS = URL.split('/')[4]
-    URL_GIT = 'https://api.github.com'
-    URL_REP = f'{URL_GIT}/repos/{NAME_OWNER}/{NAME_REPOS}'
-    URL_COMMITS = f'{URL_REP}/commits'
-    URL_PULLS = f'{URL_REP}/pulls'
-    URL_ISSUE = f'{URL_REP}/issues'
+    name_owner = url.split('/')[3]
+    name_repos = url.split('/')[4]
+    url_git = 'https://api.github.com'
+    url_rep = f'{url_git}/repos/{name_owner}/{name_repos}'
+    url_commits = f'{url_rep}/commits'
+    url_pulls = f'{url_rep}/pulls'
+    url_issue = f'{url_rep}/issues'
 
     mail_git = input(f'\nПочта аккаунта Github: ')
     if not is_not_blank(mail_git):
@@ -166,25 +166,25 @@ def main():
     pass_git = getpass(f'\nПароль: ')
     if not is_not_blank(pass_git):
         return sys.stdout.write(f'\nПароль не найден\n')
-    MAIL_PASS = (mail_git, pass_git)
+    mail_pass = (mail_git, pass_git)
 
-    BRANCH = input(f'\nВетвь для анализа: ')
-    if not is_not_blank(BRANCH):
+    branch = input(f'\nВетвь для анализа: ')
+    if not is_not_blank(branch):
         sys.stdout.write(f'\nВетка не найдена. '
                          'По умолчанию устанавливается master\n')
-        BRANCH = 'master'
+        branch = 'master'
 
-    DATE_START = input(f'\nДата начала анализа (ГГ-ММ-ДД): ') + 'T00:00:00Z'
-    DATE_FINISH = input(f'\nДата окончания анализа (ГГ-ММ-ДД): ') + 'T00:00:00Z'
-    if DATE_START == 'T00:00:00Z':
-        DATE_START = '2000-00-00T00:00:00Z'
-    if DATE_FINISH == 'T00:00:00Z':
-        DATE_FINISH = '2900-00-00T00:00:00Z'
+    date_start = input(f'\nДата начала анализа (ГГ-ММ-ДД): ') + 'T00:00:00Z'
+    date_finish = input(f'\nДата окончания анализа (ГГ-ММ-ДД): ') + 'T00:00:00Z'
+    if date_start == 'T00:00:00Z':
+        date_start = '2000-00-00T00:00:00Z'
+    if date_finish == 'T00:00:00Z':
+        date_finish = '2900-00-00T00:00:00Z'
 
     # Sign in
     sys.stdout.write(f"\n\n-Sign in GitHub-\n")
     sleep(random.randint(1, 4))
-    sign_in = github_resp(url=URL_GIT, login=MAIL_PASS,
+    sign_in = github_resp(url=url_git, login=mail_pass,
                           timeout=3, params=''
                           )
     stat_sign_in = sign_in[0]
@@ -192,8 +192,8 @@ def main():
 
     # commits
     sys.stdout.write(f"\n-Get commits-\n")
-    commits, comm_st = get_commits(url=URL_COMMITS, branch=BRANCH,
-                                   since=DATE_START, until=DATE_FINISH, timeout=3)
+    commits, comm_st = get_commits(url=url_commits, branch=branch,
+                                   since=date_start, until=date_finish, timeout=3)
     if comm_st != 'Success!':
         return sys.stdout.write(f"{comm_st}\n")
     # Считаем коммиты авторов и сортируем по убыванию
@@ -207,8 +207,8 @@ def main():
 
     # pulls closed
     sys.stdout.write(f"\n-Get pulls closed-\n")
-    closed_pulls, pulls_stat_cl = get(URL_PULLS, 'closed', BRANCH, 3,
-                                      start=DATE_START, finish=DATE_FINISH
+    closed_pulls, pulls_stat_cl = get(url_pulls, 'closed', branch, 3,
+                                      start=date_start, finish=date_finish
                                       )
     if pulls_stat_cl != 'Success!':
         return sys.stdout.write(f"{pulls_stat_cl}\n")
@@ -220,8 +220,8 @@ def main():
 
     # pulls open
     sys.stdout.write(f"\n-Get pulls open-\n")
-    open_pulls, pulls_stat_op = get(URL_PULLS, 'open', BRANCH, 3,
-                                    start=DATE_START, finish=DATE_FINISH
+    open_pulls, pulls_stat_op = get(url_pulls, 'open', branch, 3,
+                                    start=date_start, finish=date_finish
                                     )
     if pulls_stat_op != 'Success!':
         return sys.stdout.write(f"{pulls_stat_op}\n")
@@ -240,8 +240,8 @@ def main():
 
     # issue closed
     sys.stdout.write(f"\n-Get issue closed-\n")
-    closed_issue, issue_stat_cl = get(URL_ISSUE, 'closed', BRANCH, 3,
-                                      start=DATE_START, finish=DATE_FINISH
+    closed_issue, issue_stat_cl = get(url_issue, 'closed', branch, 3,
+                                      start=date_start, finish=date_finish
                                       )
     if issue_stat_cl != 'Success!':
         return sys.stdout.write(f"{issue_stat_cl}\n")
@@ -253,8 +253,8 @@ def main():
 
     # issue open
     sys.stdout.write(f"\n-Get issue open-\n")
-    open_issue, issue_stat_op = get(URL_ISSUE, 'open', BRANCH, 3,
-                                    start=DATE_START, finish=DATE_FINISH
+    open_issue, issue_stat_op = get(url_issue, 'open', branch, 3,
+                                    start=date_start, finish=date_finish
                                     )
     if issue_stat_op != 'Success!':
         return sys.stdout.write(f"{issue_stat_op}\n")
