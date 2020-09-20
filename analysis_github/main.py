@@ -4,9 +4,9 @@ import sys
 import re
 import math
 import datetime
+from getpass import getpass
 from time import sleep
 from collections import Counter
-from getpass import getpass
 
 
 def github_resp(**kwargs):
@@ -21,14 +21,14 @@ def github_resp(**kwargs):
                          params=kwargs['params'],
                          )
         r.raise_for_status()
-    except requests.exceptions.HTTPError as errh:
-        res.append(f"Http Error: {errh}")
+    except requests.exceptions.HTTPError as err_h:
+        res.append(f"Http Error: {err_h}")
         return res
-    except requests.exceptions.ConnectionError as errc:
-        res.append(f"Error Connection: {errc}")
+    except requests.exceptions.ConnectionError as err_c:
+        res.append(f"Error Connection: {err_c}")
         return res
-    except requests.exceptions.Timeout as errt:
-        res.append(f"Timeout error: {errt}")
+    except requests.exceptions.Timeout as err_t:
+        res.append(f"Timeout error: {err_t}")
         return res
     except requests.exceptions.RequestException as err:
         res.append(f"Something Else: {err}")
@@ -39,15 +39,16 @@ def github_resp(**kwargs):
         # получаем ссылку на следующую страницу
         link = r.headers.get('link', None)
         if link is not None:
-            link_next = [l for l in link.split(',') if 'rel="next"' in l]
+            link_next = [l_n for l_n in link.split(',') if 'rel="next"' in l_n]
             if len(link_next) > 0:
                 res.append(int(link_next[0][link_next[0].find("page=")
                                             + 5:link_next[0].find(">")]))
             else:
+                # ссылки на след. страницу нет
                 res.append(0)
         else:
+            # ссылки на след. страницу нет
             res.append(0)
-
         r.encoding = 'utf-8'
         res.append(r.json())
         return res  # [статус, следующая страница, ответ запроса]
@@ -58,7 +59,7 @@ def pretty_table(rows, column_count, column_spacing=4):
 
     aligned_columns = []
     for column in range(column_count):
-        column_data = list(map(lambda row: row[column], rows))
+        column_data = list(map(lambda row_: row_[column], rows))
         aligned_columns.append((max(map(len, column_data)) + column_spacing, column_data))
 
     for row in range(len(rows)):
@@ -121,7 +122,7 @@ def get_commits(url, branch, timeout, since, until):
     return p, stats
 
 
-def valid_age(list, number_days):
+def valid_age(list_, number_days):
     """Поиск "старых" элементов списка"""
 
     n = []
@@ -129,7 +130,7 @@ def valid_age(list, number_days):
     b1 = re.split(r':', date_now)
     b11 = b1[0].split('T')[0].split('-')
     bb = datetime.date(int(b11[0]), int(b11[1]), int(b11[2]))
-    for i in list:
+    for i in list_:
         a1 = re.split(r':', i[1])
         a11 = a1[0].split('T')[0].split('-')
         aa = datetime.date(int(a11[0]), int(a11[1]), int(a11[2]))
@@ -140,51 +141,54 @@ def valid_age(list, number_days):
 
 
 def is_not_blank(s):
+    """ Отслеживаем пустое
+    значение и пробел"""
+
     return bool(s and s.strip())
 
 
 def main():
     # ПАРАМЕТРЫ
     URL = input(f'\nСсылка на репозиторий: ')
-    if is_not_blank(URL) == False:
-        return sys.stdout.write('\n' + 'Ссылка на репозиторий не найдена')
+    if not is_not_blank(URL):
+        return sys.stdout.write(f'\nСсылка на репозиторий не найдена\n')
     NAME_OWNER = URL.split('/')[3]
     NAME_REPOS = URL.split('/')[4]
-    URL_GIT = 'https://github.com'
+    URL_GIT = 'https://api.github.com'
     URL_REP = f'{URL_GIT}/repos/{NAME_OWNER}/{NAME_REPOS}'
     URL_COMMITS = f'{URL_REP}/commits'
     URL_PULLS = f'{URL_REP}/pulls'
     URL_ISSUE = f'{URL_REP}/issues'
 
-    mail_ = input(f'\nПочта аккаунта Github: ')
-    if is_not_blank(mail_) == False:
-        return sys.stdout.write('\n' + 'Почта не найдена')
-    pass_ = getpass(prompt='\nПароль: ')
-    if is_not_blank(pass_) == False:
-        return sys.stdout.write('\n' + 'Пароль не найден')
-    MAIL_PASS = (mail_, pass_)
+    mail_git = input(f'\nПочта аккаунта Github: ')
+    if not is_not_blank(mail_git):
+        return sys.stdout.write(f'\nПочта не найдена\n')
+    pass_git = getpass(f'\nПароль: ')
+    if not is_not_blank(pass_git):
+        return sys.stdout.write(f'\nПароль не найден\n')
+    MAIL_PASS = (mail_git, pass_git)
 
     BRANCH = input(f'\nВетвь для анализа: ')
-    if is_not_blank(BRANCH) == False:
-        sys.stdout.write('\n' + 'Ветка не найдена. '
-                                'По умолчанию устанавливается master')
+    if not is_not_blank(BRANCH):
+        sys.stdout.write(f'\nВетка не найдена. '
+                         'По умолчанию устанавливается master\n')
         BRANCH = 'master'
 
     DATE_START = input(f'\nДата начала анализа (ГГ-ММ-ДД): ') + 'T00:00:00Z'
     DATE_FINISH = input(f'\nДата окончания анализа (ГГ-ММ-ДД): ') + 'T00:00:00Z'
-    if is_not_blank(DATE_START) == False:
+    if DATE_START == 'T00:00:00Z':
         DATE_START = '2000-00-00T00:00:00Z'
-    if is_not_blank(DATE_FINISH) == False:
+    if DATE_FINISH == 'T00:00:00Z':
         DATE_FINISH = '2900-00-00T00:00:00Z'
 
     # Sign in
-    sys.stdout.write(f"-Sign in GitHub-\n")
+    sys.stdout.write(f"\n\n-Sign in GitHub-\n")
     sleep(random.randint(1, 4))
     sign_in = github_resp(url=URL_GIT, login=MAIL_PASS,
                           timeout=3, params=''
                           )
     stat_sign_in = sign_in[0]
-    sys.stdout.write(stat_sign_in + '\n')
+    sys.stdout.write(f'\n{stat_sign_in}')
 
     # commits
     sys.stdout.write(f"\n-Get commits-\n")
@@ -198,8 +202,8 @@ def main():
     row_commit = [['Name Author', 'Number commit']]
     [row_commit.append((str(cort[0]), str(cort[1]))) for cort in m_commit]
     # Построение таблицы
-    sys.stdout.write(f'Most active author:\n')
-    [sys.stdout.write(line + '\n') for line in pretty_table(row_commit, 2)]
+    sys.stdout.write(f'\nMost active author:\n')
+    [sys.stdout.write(f'{line}\n') for line in pretty_table(row_commit, 2)]
 
     # pulls closed
     sys.stdout.write(f"\n-Get pulls closed-\n")
@@ -210,7 +214,7 @@ def main():
         return sys.stdout.write(f"{pulls_stat_cl}\n")
     sys.stdout.write(f'\nExamples pulls closed:\n')
     numb_cl_pull = 5  # число выводимых примеров
-    [sys.stdout.write(pull[0] + '\n') for index, pull in enumerate(closed_pulls)
+    [sys.stdout.write(f'{pull[0]}\n') for index, pull in enumerate(closed_pulls)
      if index < numb_cl_pull]
     sys.stdout.write(f'\nNumber pulls closed = {len(closed_pulls)}\n')
 
@@ -223,14 +227,14 @@ def main():
         return sys.stdout.write(f"{pulls_stat_op}\n")
     sys.stdout.write(f'\nExamples pulls open:\n')
     numb_op_pull = 5  # число выводимых примеров
-    [sys.stdout.write(pull[0] + '\n') for index, pull in enumerate(open_pulls)
+    [sys.stdout.write(f'{pull[0]}\n') for index, pull in enumerate(open_pulls)
      if index < numb_op_pull]
     sys.stdout.write(f'\nNumber pulls open = {len(open_pulls)}\n')
 
     sys.stdout.write(f'\nExamples old pulls:\n')
     age_pulls = valid_age(open_pulls, 30)
     numb_old_pull = 5  # число выводимых примеров
-    [sys.stdout.write(pull[0] + '\n') for index, pull in enumerate(age_pulls)
+    [sys.stdout.write(f'{pull[0]}\n') for index, pull in enumerate(age_pulls)
      if index < numb_old_pull]
     sys.stdout.write(f'\nNumber old pulls = {len(age_pulls)}\n')
 
@@ -243,7 +247,7 @@ def main():
         return sys.stdout.write(f"{issue_stat_cl}\n")
     sys.stdout.write(f'\nExamples issue closed:\n')
     numb_cl_issue = 5  # число выводимых примеров
-    [sys.stdout.write(issue[0] + '\n') for index, issue in enumerate(closed_issue)
+    [sys.stdout.write(f'{issue[0]}\n') for index, issue in enumerate(closed_issue)
      if index < numb_cl_issue]
     sys.stdout.write(f'\nNumber issue closed = {len(closed_issue)}\n')
 
@@ -256,14 +260,14 @@ def main():
         return sys.stdout.write(f"{issue_stat_op}\n")
     sys.stdout.write(f'\nExamples issue open:\n')
     numb_op_issue = 5  # число выводимых примеров
-    [sys.stdout.write(issue[0] + '\n') for index, issue in enumerate(open_issue)
+    [sys.stdout.write(f'{issue[0]}\n') for index, issue in enumerate(open_issue)
      if index < numb_op_issue]
     sys.stdout.write(f'\nNumber issue open = {len(open_issue)}\n')
 
     sys.stdout.write(f'\nExamples old issue:\n')
     age_issue = valid_age(open_issue, 14)
     numb_old_issue = 5  # число выводимых примеров
-    [sys.stdout.write(issue[0] + '\n') for index, issue in enumerate(age_issue)
+    [sys.stdout.write(f'{issue[0]}\n') for index, issue in enumerate(age_issue)
      if index < numb_old_issue]
     sys.stdout.write(f'\nNumber old issue = {len(age_issue)}\n')
 
