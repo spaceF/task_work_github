@@ -147,10 +147,13 @@ def is_not_blank(s):
 
 
 def main():
+
+    stdout.write(f'\nAnalysis of GitHubs repository\n')
+
     # ПАРАМЕТРЫ
-    url = input(f'\nСсылка на репозиторий: ')
+    url = input(f'\nLink repository: ')
     if not is_not_blank(url):
-        return stdout.write(f'\nСсылка на репозиторий не найдена\n')
+        return stdout.write(f'\nLink is not found\n')
     name_owner = url.split('/')[3]
     name_repos = url.split('/')[4]
     url_git = 'https://api.github.com'
@@ -159,22 +162,22 @@ def main():
     url_pulls = f'{url_rep}/pulls'
     url_issue = f'{url_rep}/issues'
 
-    mail_git = input(f'\nПочта аккаунта Github: ')
+    mail_git = input(f'\nMail Github: ')
     if not is_not_blank(mail_git):
-        return stdout.write(f'\nПочта не найдена\n')
-    pass_git = getpass(f'\nПароль: ')
+        return stdout.write(f'\nMail is not found\n')
+    pass_git = getpass(f'\nPassword: ')
     if not is_not_blank(pass_git):
-        return stdout.write(f'\nПароль не найден\n')
+        return stdout.write(f'\nPassword is not found\n')
     mail_pass = (mail_git, pass_git)
 
-    branch = input(f'\nВетвь для анализа: ')
+    branch = input(f'\nBranch for analysis: ')
     if not is_not_blank(branch):
-        stdout.write(f'\nВетка не найдена. '
-                     'По умолчанию устанавливается master\n')
+        stdout.write(f'\nBranch is not found. '
+                     'Default - master\n')
         branch = 'master'
 
-    date_start = input(f'\nДата начала анализа (ГГ-ММ-ДД): ') + 'T00:00:00Z'
-    date_finish = input(f'\nДата окончания анализа (ГГ-ММ-ДД): ') + 'T00:00:00Z'
+    date_start = input(f'\nStart date analysis (YY-MM-DD): ') + 'T00:00:00Z'
+    date_finish = input(f'\nFinish date analysis (YY-MM-DD): ') + 'T00:00:00Z'
     if date_start == 'T00:00:00Z':
         date_start = '2000-00-00T00:00:00Z'
     if date_finish == 'T00:00:00Z':
@@ -269,6 +272,9 @@ def main():
      if index < numb_old_issue]
     stdout.write(f'\nNumber old issue = {len(age_issue)}\n')
 
+    stdout.write(f'\nAnalysis of GitHubs repository completed successfully\n')
+
 
 if __name__ == '__main__':
     main()
+    input(f'\nClick on any button\n')
