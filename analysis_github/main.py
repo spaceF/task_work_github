@@ -1,12 +1,12 @@
 import requests
-import random
 import sys
-import re
-import math
 import datetime
 from getpass import getpass
 from time import sleep
 from collections import Counter
+from math import fabs
+from random import randint
+from re import split
 
 
 def github_resp(**kwargs):
@@ -14,7 +14,7 @@ def github_resp(**kwargs):
 
     res = []
     try:
-        sleep(random.randint(3, 10))
+        sleep(randint(3, 10))
         r = requests.get(url=f"{kwargs['url']}",
                          auth=kwargs['login'],
                          timeout=kwargs['timeout'],
@@ -102,7 +102,6 @@ def get_commits(url, branch, timeout, since, until):
     i = 1  # Итерация страниц
     page = 1  # Флаг наличия следующей страницы
     while page > 0:
-        sleep(random.randint(1, 4))
         resp_commits = github_resp(url=url, login='', timeout=timeout,
                                    params={"sha": branch,
                                            "since": since,
@@ -127,14 +126,14 @@ def valid_age(list_, number_days):
 
     n = []
     date_now = datetime.datetime.now().isoformat()
-    b1 = re.split(r':', date_now)
+    b1 = split(r':', date_now)
     b11 = b1[0].split('T')[0].split('-')
     bb = datetime.date(int(b11[0]), int(b11[1]), int(b11[2]))
     for i in list_:
-        a1 = re.split(r':', i[1])
+        a1 = split(r':', i[1])
         a11 = a1[0].split('T')[0].split('-')
         aa = datetime.date(int(a11[0]), int(a11[1]), int(a11[2]))
-        x = math.fabs(int(str(aa - bb).split()[0]))
+        x = fabs(int(str(aa - bb).split()[0]))
         if x >= number_days:
             n.append(i)
     return n
@@ -183,7 +182,6 @@ def main():
 
     # Sign in
     sys.stdout.write(f"\n\n-Sign in GitHub-\n")
-    sleep(random.randint(1, 4))
     sign_in = github_resp(url=url_git, login=mail_pass,
                           timeout=3, params=''
                           )
