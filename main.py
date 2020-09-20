@@ -67,7 +67,7 @@ def pretty_table(rows, column_count, column_spacing=4):
         yield ''.join(map(lambda x: x[1] + ' ' * (x[0] - len(x[1])), aligned_row))
 
 
-def get(url, state, branch, timeout, start, finish):
+def get_github(url, state, branch, timeout, start, finish):
     """Получить даты, примеры заданной
     ветки заданного времени"""
 
@@ -147,7 +147,6 @@ def is_not_blank(s):
 
 
 def main():
-
     stdout.write(f'\nAnalysis of GitHubs repository\n')
 
     # ПАРАМЕТРЫ
@@ -172,7 +171,7 @@ def main():
 
     branch = input(f'\nBranch for analysis: ')
     if not is_not_blank(branch):
-        stdout.write(f'\nBranch is not found. '
+        stdout.write(f'Branch is not found. '
                      'Default - master\n')
         branch = 'master'
 
@@ -208,9 +207,9 @@ def main():
 
     # pulls closed
     stdout.write(f"\n-Get pulls closed-\n")
-    closed_pulls, pulls_stat_cl = get(url_pulls, 'closed', branch, 3,
-                                      start=date_start, finish=date_finish
-                                      )
+    closed_pulls, pulls_stat_cl = get_github(url_pulls, 'closed', branch, 3,
+                                             start=date_start, finish=date_finish
+                                             )
     if pulls_stat_cl != 'Success!':
         return stdout.write(f"{pulls_stat_cl}\n")
     stdout.write(f'\nExamples pulls closed:\n')
@@ -221,9 +220,9 @@ def main():
 
     # pulls open
     stdout.write(f"\n-Get pulls open-\n")
-    open_pulls, pulls_stat_op = get(url_pulls, 'open', branch, 3,
-                                    start=date_start, finish=date_finish
-                                    )
+    open_pulls, pulls_stat_op = get_github(url_pulls, 'open', branch, 3,
+                                           start=date_start, finish=date_finish
+                                           )
     if pulls_stat_op != 'Success!':
         return stdout.write(f"{pulls_stat_op}\n")
     stdout.write(f'\nExamples pulls open:\n')
@@ -241,9 +240,9 @@ def main():
 
     # issue closed
     stdout.write(f"\n-Get issue closed-\n")
-    closed_issue, issue_stat_cl = get(url_issue, 'closed', branch, 3,
-                                      start=date_start, finish=date_finish
-                                      )
+    closed_issue, issue_stat_cl = get_github(url_issue, 'closed', branch, 3,
+                                             start=date_start, finish=date_finish
+                                             )
     if issue_stat_cl != 'Success!':
         return stdout.write(f"{issue_stat_cl}\n")
     stdout.write(f'\nExamples issue closed:\n')
@@ -254,9 +253,9 @@ def main():
 
     # issue open
     stdout.write(f"\n-Get issue open-\n")
-    open_issue, issue_stat_op = get(url_issue, 'open', branch, 3,
-                                    start=date_start, finish=date_finish
-                                    )
+    open_issue, issue_stat_op = get_github(url_issue, 'open', branch, 3,
+                                           start=date_start, finish=date_finish
+                                           )
     if issue_stat_op != 'Success!':
         return stdout.write(f"{issue_stat_op}\n")
     stdout.write(f'\nExamples issue open:\n')
